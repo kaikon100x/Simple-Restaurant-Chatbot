@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RESTAURANT MANAGEMENT CHATBOT</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css'>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
+
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-image: url("{{ url_for('static', filename='2c238122-135a-4dca-a136-ec96028f2aea_0.jpeg') }}"); /* Replace with your actual image URL */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(42, 27, 27, 0.7); /* Light overlay to apply blur */
+  backdrop-filter: blur(3px); /* Blur effect */
+  z-index: -1; /* Behind all content */
+}
+
+/* Center the chatbox */
+#chat-circle {
+  display: none; /* Hide the chat button */
+}
+
+.chat-box {
+  position: fixed;
+  top: 65%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.chat-box-body {
+  height: 400px;
+  overflow-y: scroll;
+}
+
+/* Optionally, style your chat window further */
+
+
+    #center-text {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    #center-text h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    font-size: 3.5em;
+    letter-spacing: 2px;
+    color: white;
+}
+
+    #chat-circle {
+      position: fixed;
+      bottom: 50px;
+      right: 30px;
+      background-color: #2196f3;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+
+    .chat-box {
+      width: 350px;
+      height: 500px;
+      background: white;
+      position: fixed;
+      bottom: 120px;
+      right: 30px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+
+    .chat-box-header {
+      padding: 10px;
+      background-color: #2196f3;
+      color: white;
+      text-align: left;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .chat-box-toggle {
+      float: right;
+      cursor: pointer;
+    }
+
+    .chat-box-body {
+      padding: 10px;
+      height: 350px;
+      overflow-y: auto;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .chat-logs {
+      list-style: none;
+      padding: 0;
+    }
+
+    .chat-logs .chat-log {
+      margin-bottom: 10px;
+    }
+
+    .chat-input {
+      padding: 10px;
+      background-color: #f4f4f4;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-input input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .chat-submit {
+      margin-left: 10px;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    .chat-submit i {
+      font-size: 24px;
+      color: #2196f3;
+    }
+
+    .user-message, .bot-message {
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .user-message {
+      background-color: #2196f3;
+      color: white;
+      text-align: right;
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background-color: #e5e5e5;
+      color: black;
+    }
+
+    .order-options, .post-order-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .order-options button, .post-order-options button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .confirm-order {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .cancel-order {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .view-order {
+      background-color: #03a9f4;
+      color: white;
+    }
+
+    .order-more {
+      background-color: #8bc34a;
+      color: white;
+    }
+
+    .view-menu {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .checkout {
+      background-color: #9c27b0;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Chat UI -->
+<div id="center-text">
+    <h2>SNAXX - TASTE THE FLAVOUR</h2>
+    <p>ORDER FROM OUR MENU THROUGH OUR CHATBOT</p>
+</div>
+
+<div id="overlay"></div>
+
+<div id="body">
+  <div id="chat-circle">
+    <i class="material-icons">speaker_phone</i>
+  </div>
+
+  <div class="chat-box">
+    <div class="chat-box-header">
+      ChatBot
+      <span class="chat-box-toggle"><i class="material-icons">close</i></span>
+    </div>
+    <div class="chat-box-body">
+      <ul class="chat-logs">
+        <!-- Messages will be appended here -->
+      </ul>
+    </div>
+    <div class="chat-input">
+      <form id="chat-form">
+        <input type="text" id="chat-input" placeholder="Send a message..." autocomplete="off"/>
+        <button type="submit" class="chat-submit"><i class="material-icons">send</i></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Logic -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+<script>
+  $(document).ready(function () {
+    let chatOpened = true; // Start with chat window opened
+    let userName = ""; // Variable to store the customer's name
+    const menuItems = {
+      "Pizza": 250,
+      "Burger": 150,
+      "Pasta": 200,
+      "Salad": 120,
+      "Sushi": 350,
+      "Dosa": 100,
+      "Ice Cream": 90,
+      "Chocolate": 80,
+      "Coffee": 60
+    }; // Menu items with prices in INR
+    let currentOrder = []; // Store the ordered items
+
+    // Automatically show the chatbox on load (centered)
+    $('.chat-box').show();
+
+    // This triggers the chatbot to ask for the user's name on page load
+    setTimeout(() => {
+      if (!userName) {
+        sendBotMessage("Hello! I'm Snaxx Chatbot. May I know your name, please?");
+        scrollToBottom();
+      }
+    }, 500);
+
+    // Handle chat submission
+    $('#chat-form').submit(function (e) {
+      e.preventDefault();
+      let userMessage = $('#chat-input').val().trim().toLowerCase(); // Convert input to lowercase
+      if (userMessage === "") return; // Do nothing if the input is empty
+
+      sendUserMessage(userMessage);
+      $('#chat-input').val(""); // Clear the input field
+      scrollToBottom();
+
+      // If userName is not yet set, store it and stop asking again
+      if (!userName) {
+        userName = userMessage; // Store the user's name
+        sendBotMessage(`Nice to meet you, ${userName}! How can I assist you today?`);
+        setTimeout(() => {
+          sendBotMessage("Would you like to see our menu? Type 'menu' to get started.");
+          scrollToBottom();
+        }, 1000);
+        return; // Return here to avoid processing the message further
+      }
+
+      // Check if the input matches any item in the menu (case-insensitive)
+      let matchedItem = null;
+      for (let item in menuItems) {
+        if (item.toLowerCase() === userMessage) {
+          matchedItem = item; // Match found
+          break;
+        }
+      }
+
+      if (matchedItem) {
+        currentOrder.push(matchedItem); // Add the item to the current order
+        sendBotMessage(`You selected: ${matchedItem}. Do you want to confirm your order or cancel?`);
+        scrollToBottom();
+        showConfirmCancelButtons();
+      } else {
+        // Handle other user inputs if no menu match found
+        $.ajax({
+          url: "/chat",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ message: userMessage }),
+          success: function (response) {
+            sendBotMessage(response.response);
+            scrollToBottom();
+          }
+        });
+      }
+    });
+
+  // Handle chat submission
+  $('#chat-form').submit(function (e) {
+    e.preventDefault();
+    let userMessage = $('#chat-input').val().trim(); // Remove extra spaces and keep user input in its original form
+    if (userMessage === "") return;
+
+    sendUserMessage(userMessage);
+    $('#chat-input').val(""); // Clear input field
+    scrollToBottom();
+
+    // If the user hasn't entered their name yet, store the name and greet the user
+    if (!userName) {
+      userName = userMessage; // Store the user's name
+      sendBotMessage(`Nice to meet you, ${userName}! How can I serve you today?`);
+      setTimeout(() => {
+        sendBotMessage("Would you like to see our menu? Type 'menu'.");
+        scrollToBottom();
+      }, 1000);
+      return;
+    }
+
+    // Handle order or other user inputs after the name has been provided
+    let matchedItem = null;
+    for (let item in menuItems) {
+      if (item.toLowerCase() === userMessage) {
+        matchedItem = item; // Match found
+        break;
+      }
+    }
+
+    if (matchedItem) {
+      currentOrder.push(matchedItem); // Add the item to the current order
+      sendBotMessage(`You selected: ${matchedItem}. Do you want to confirm your order or cancel?`);
+      scrollToBottom();
+      showConfirmCancelButtons();
+    } else {
+      $.ajax({
+        url: "/chat",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ message: userMessage }),
+        success: function (response) {
+          sendBotMessage(response.response);
+          scrollToBottom();
+        }
+      });
+    }
+  });
+
+  // Show confirm and cancel buttons
+  function showConfirmCancelButtons() {
+    let buttons = `
+      <div class="order-options">
+        <button class="confirm-order">Confirm Order 👍</button>
+        <button class="cancel-order">Cancel Order 👎</button>
+      </div>
+    `;
+    $('.chat-logs').append(`<li class="chat-log bot-message">${buttons}</li>`);
+    scrollToBottom();
+
+    // Handle confirm order
+    $('.confirm-order').click(function () {
+      sendBotMessage("Order Confirmed ✅");
+      scrollToBottom();
+      removeOrderOptions();
+      showPostOrderOptions(); // Show further options
+    });
+
+    // Handle cancel order
+    $('.cancel-order').click(function () {
+      sendBotMessage("Order Cancelled ❌");
+      currentOrder = []; // Clear the current order
+      scrollToBottom();
+      removeOrderOptions();
+      showPostOrderOptions(); // Show further options
+    });
+  }
+
+  // Show options after confirming/canceling an order
+  function showPostOrderOptions() {
+    let buttons = `
+      <div class="post-order-options">
+        <button class="view-order">View Order 📄</button>
+        <button class="order-more">Order More 🍽</button>
+        <button class="view-menu">View Menu 📋</button>
+        <button class="checkout">Checkout 💳</button>
+      </div>
+    `;
+    $('.chat-logs').append(`<li class="chat-log bot-message">${buttons}</li>`);
+    scrollToBottom();
+
+    // Handle View Order button
+    $('.view-order').click(function () {
+      if (currentOrder.length > 0) {
+        sendBotMessage(`Your current order: ${currentOrder.join(', ')}. Do you want to remove any items?`);
+        scrollToBottom();
+        showRemoveItemButtons(); // Show remove options
+      } else {
+        sendBotMessage("Your cart is empty.");
+      }
+      scrollToBottom();
+    });
+
+    // Handle Order More button
+    $('.order-more').click(function () {
+      sendBotMessage("What else would you like to add?");
+      scrollToBottom();
+    });
+
+    // Handle View Menu button
+    $('.view-menu').click(function () {
+      let menu = Object.entries(menuItems).map(([item, price]) => `${item}: ₹${price}`).join('<br/>');
+      sendBotMessage(`Here's our menu:<br/>${menu}`);
+      scrollToBottom();
+    });
+
+    // Handle Checkout button
+    $('.checkout').click(function () {
+      if (currentOrder.length > 0) {
+        let totalAmount = currentOrder.reduce((total, item) => total + menuItems[item], 0); // Calculate total price in INR
+        sendBotMessage(`Your current order: ${currentOrder.join(', ')}. Your total is ₹${totalAmount.toFixed(2)}. Do you want to confirm your order?`);
+        scrollToBottom();
+        showFinalConfirmButtons(totalAmount); // Show confirm/cancel after displaying order and total
+      } else {
+        sendBotMessage("Your cart is empty. Please order something first.");
+      }
+      scrollToBottom();
+    });
+  }
+
+  // Show remove item buttons after "View Order"
+  function showRemoveItemButtons() {
+    let buttons = currentOrder.map((item, index) => `<button class="remove-item" data-index="${index}">Remove ${item}</button>`).join('');
+    $('.chat-logs').append(`<li class="chat-log bot-message">${buttons}</li>`);
+    scrollToBottom();
+
+    // Handle item removal
+    $('.remove-item').click(function () {
+      let index = $(this).data('index');
+      let removedItem = currentOrder.splice(index, 1); // Remove item from order
+      sendBotMessage(`${removedItem} has been removed from your order.`);
+      scrollToBottom();
+      showPostOrderOptions(); // Re-show options after removal
+    });
+  }
+
+  // Show confirm and cancel buttons for final order confirmation
+  function showFinalConfirmButtons(totalAmount) {
+    let buttons = `
+      <div class="confirm-options">
+        <button class="final-confirm-order">Confirm Order 👍</button>
+        <button class="final-cancel-order">Cancel Order 👎</button>
+      </div>
+    `;
+    $('.chat-logs').append(`<li class="chat-log bot-message">${buttons}</li>`);
+    scrollToBottom();
+
+    // Handle final order confirmation
+    $('.final-confirm-order').click(function () {
+      sendBotMessage(`Order confirmed! Your total is ₹${totalAmount.toFixed(2)}. Thank you for ordering! 😄`);
+      currentOrder = []; // Clear the order after confirmation
+      scrollToBottom();
+      removeFinalConfirmButtons();
+    });
+
+    // Handle final order cancellation
+    $('.final-cancel-order').click(function () {
+      sendBotMessage("Order cancelled! 😞 Please order again if you change your mind.");
+      currentOrder = []; // Clear the current order
+      scrollToBottom();
+      removeFinalConfirmButtons();
+    });
+  }
+
+  // Remove confirm and cancel buttons
+  function removeOrderOptions() {
+    $('.order-options').remove();
+  }
+
+  // Remove post-order options
+  function removePostOrderOptions() {
+    $('.post-order-options').remove();
+  }
+
+  // Remove final confirm and cancel buttons
+  function removeFinalConfirmButtons() {
+    $('.confirm-options').remove();
+  }
+
+  // Scroll chatbox to bottom
+  function scrollToBottom() {
+    var chatBody = $('.chat-box-body');
+    chatBody.scrollTop(chatBody.prop("scrollHeight"));
+  }
+
+  // Append user message to chat logs
+  function sendUserMessage(message) {
+    $('.chat-logs').append(`<li class="chat-log user-message">${message}</li>`);
+  }
+
+  // Append bot message to chat logs
+  function sendBotMessage(message) {
+    $('.chat-logs').append(`<li class="chat-log bot-message">${message}</li>`);
+  }
+});
+
+</script>
+
+
+</body>
+</html>
